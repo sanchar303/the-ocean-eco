@@ -1,0 +1,2578 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="navy">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>The Ocean</title>
+
+  <!-- Minimalist Steel-Ocean Wave Crests SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23162130'/%3E%3Cpath d='M10 36c6-7 14-7 20 0s14 7 24-2' fill='none' stroke='%233c9ad9' stroke-width='5' stroke-linecap='round'/%3E%3Cpath d='M10 47c6-7 14-7 20 0s14 7 24-2' fill='none' stroke='%238aa0b8' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M14 25c5-5 11-5 16 0s11 5 20-2' fill='none' stroke='%23e6eef7' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <!-- Apply Saved Theme Immediately Before First Paint -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('the_ocean_theme');
+      if (saved === 'light' || saved === 'navy') {
+        document.documentElement.setAttribute('data-theme', saved);
+      }
+    })();
+  </script>
+
+  <!-- Firebase v10.12.2 Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <style>
+    /* =====================================================================
+       1. DUAL NEUMORPHIC THEME TOKENS (DARK STEEL NAVY & LIGHT PORCELAIN)
+       ===================================================================== */
+    :root,
+    [data-theme="navy"] {
+      --bg-base: #162130;
+      --surface-elevated: linear-gradient(145deg, #1b283b, #121b28);
+      --surface-flat: #162130;
+      --shadow-raised: -6px -6px 14px rgba(34, 52, 76, 0.55), 6px 6px 14px rgba(6, 11, 18, 0.8);
+      --shadow-raised-sm: -3px -3px 8px rgba(34, 52, 76, 0.5), 3px 3px 8px rgba(6, 11, 18, 0.78);
+      --shadow-inset: inset 4px 4px 9px rgba(6, 11, 18, 0.84), inset -4px -4px 9px rgba(34, 52, 76, 0.45);
+      --specular-edge: rgba(185, 215, 245, 0.12);
+      --divider: rgba(138, 160, 184, 0.12);
+      --accent: #3c9ad9;
+      --accent-soft: rgba(60, 154, 217, 0.16);
+      --accent-contrast: #ffffff;
+      --text-primary: #e6eef7;
+      --text-secondary: #8aa0b8;
+      --positive: #34b37e;
+      --negative: #d95b66;
+      --warning: #d99b3c;
+      --scrollbar-thumb: rgba(138, 160, 184, 0.25);
+    }
+
+    [data-theme="light"] {
+      --bg-base: #e2e8f0;
+      --surface-elevated: linear-gradient(145deg, #edf2f8, #d8e0ea);
+      --surface-flat: #e2e8f0;
+      --shadow-raised: -6px -6px 14px rgba(255, 255, 255, 0.9), 6px 6px 14px rgba(162, 176, 196, 0.6);
+      --shadow-raised-sm: -3px -3px 8px rgba(255, 255, 255, 0.88), 3px 3px 8px rgba(162, 176, 196, 0.58);
+      --shadow-inset: inset 4px 4px 8px rgba(162, 176, 196, 0.65), inset -4px -4px 8px rgba(255, 255, 255, 0.92);
+      --specular-edge: rgba(255, 255, 255, 0.9);
+      --divider: rgba(90, 110, 133, 0.14);
+      --accent: #1d6fa5;
+      --accent-soft: rgba(29, 111, 165, 0.12);
+      --accent-contrast: #ffffff;
+      --text-primary: #172331;
+      --text-secondary: #5a6e85;
+      --positive: #198754;
+      --negative: #c03946;
+      --warning: #b87714;
+      --scrollbar-thumb: rgba(90, 110, 133, 0.28);
+    }
+
+    /* =====================================================================
+       2. STRICT 100dvh VIEWPORT LOCK & RESET
+       ===================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100dvh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* =====================================================================
+       3. NEUMORPHIC SURFACES, SPECULAR BEVELS & TACTILE CONTROLS
+       ===================================================================== */
+    .neu-card {
+      background: var(--surface-elevated);
+      border-radius: 12px;
+      box-shadow: var(--shadow-raised);
+      border-top: 1px solid var(--specular-edge);
+      border-left: 1px solid var(--specular-edge);
+      border-right: 1px solid transparent;
+      border-bottom: 1px solid transparent;
+    }
+
+    .neu-card-sm {
+      background: var(--surface-elevated);
+      border-radius: 12px;
+      box-shadow: var(--shadow-raised-sm);
+      border-top: 1px solid var(--specular-edge);
+      border-left: 1px solid var(--specular-edge);
+    }
+
+    .neu-inset {
+      background: var(--surface-flat);
+      border-radius: 9px;
+      box-shadow: var(--shadow-inset);
+      border: 1px solid transparent;
+    }
+
+    .neu-input {
+      width: 100%;
+      background: var(--surface-flat);
+      color: var(--text-primary);
+      border-radius: 9px;
+      box-shadow: var(--shadow-inset);
+      border: 1px solid transparent;
+      padding: 8px 11px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .neu-input::placeholder {
+      color: var(--text-secondary);
+      opacity: 0.72;
+    }
+
+    .neu-input:focus {
+      border-color: var(--accent);
+    }
+
+    /* Interactive <div role="button"> Controls */
+    .neu-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+      border-radius: 9px;
+      box-shadow: var(--shadow-raised-sm);
+      border-top: 1px solid var(--specular-edge);
+      border-left: 1px solid var(--specular-edge);
+      border-right: 1px solid transparent;
+      border-bottom: 1px solid transparent;
+      padding: 7px 12px;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: transform 0.1s ease, box-shadow 0.12s ease, opacity 0.15s ease, color 0.15s ease;
+    }
+
+    .neu-btn:active {
+      box-shadow: var(--shadow-inset);
+      transform: scale(0.992);
+      border-top-color: transparent;
+      border-left-color: transparent;
+    }
+
+    .neu-btn.active-tab,
+    .neu-btn.btn-accent {
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-top-color: rgba(255, 255, 255, 0.32);
+      border-left-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .neu-btn.active-tab:active,
+    .neu-btn.btn-accent:active {
+      box-shadow: inset 3px 3px 7px rgba(0, 0, 0, 0.35);
+      transform: scale(0.992);
+    }
+
+    .neu-btn.btn-positive {
+      color: var(--positive);
+    }
+
+    .neu-btn.btn-negative {
+      color: var(--negative);
+    }
+
+    .neu-btn.btn-warning {
+      color: var(--warning);
+    }
+
+    .neu-btn.disabled {
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    .neu-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .badge-pos {
+      background: rgba(52, 179, 126, 0.15);
+      color: var(--positive);
+    }
+
+    .badge-neg {
+      background: rgba(217, 91, 102, 0.15);
+      color: var(--negative);
+    }
+
+    .badge-warn {
+      background: rgba(217, 155, 60, 0.16);
+      color: var(--warning);
+    }
+
+    /* =====================================================================
+       4. LAYOUT SHELL & RESPONSIVE GRID ARCHITECTURE
+       ===================================================================== */
+    .app-root {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      padding: 8px 10px 4px 10px;
+      gap: 8px;
+    }
+
+    .top-bar {
+      flex-shrink: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      gap: 8px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--warning);
+      flex-shrink: 0;
+    }
+    .status-dot.online { background: var(--positive); }
+    .status-dot.offline { background: var(--negative); }
+
+    /* Auth Screen */
+    .auth-wrapper {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 360px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Workspace Container */
+    .workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .side-nav {
+      display: none;
+      width: 184px;
+      flex-shrink: 0;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px;
+      gap: 8px;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .nav-list .neu-btn {
+      justify-content: flex-start;
+      padding: 9px 12px;
+      width: 100%;
+    }
+
+    .main-stage {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .mobile-nav {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+    }
+
+    .mobile-nav .neu-btn {
+      flex: 1;
+      padding: 7px 4px;
+      font-size: 11px;
+      min-width: 0;
+    }
+
+    @media (min-width: 900px) {
+      .side-nav { display: flex; }
+      .mobile-nav { display: none; }
+      .app-root { padding: 10px 14px 5px 14px; gap: 10px; }
+    }
+
+    /* Tab Views & Scroll Areas */
+    .tab-pane {
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    .scroll-area {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .scroll-area::-webkit-scrollbar {
+      width: 4px;
+    }
+    .scroll-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scroll-area::-webkit-scrollbar-thumb {
+      background: var(--scrollbar-thumb);
+      border-radius: 6px;
+    }
+
+    /* Grid Helpers */
+    .kpi-grid {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .split-grid {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    @media (min-width: 900px) {
+      .split-grid { grid-template-columns: 1.15fr 0.85fr; }
+      .split-grid-even { grid-template-columns: 1fr 1fr; }
+      .gov-grid { grid-template-columns: 0.9fr 1.1fr 1fr; }
+    }
+
+    .panel-box {
+      padding: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .row-item {
+      padding: 9px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .muted { color: var(--text-secondary); }
+    .text-pos { color: var(--positive); }
+    .text-neg { color: var(--negative); }
+    .text-warn { color: var(--warning); }
+    .text-accent { color: var(--accent); }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hidden { display: none !important; }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(10, 16, 24, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 390px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    /* Toast Banner */
+    .toast-stack {
+      position: fixed;
+      top: 56px;
+      right: 12px;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: calc(100vw - 24px);
+      pointer-events: none;
+    }
+
+    .toast-item {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      pointer-events: auto;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-secondary);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="toast-stack" class="toast-stack"></div>
+
+  <div class="app-root">
+    <!-- TOP HEADER -->
+    <header class="top-bar neu-card">
+      <div class="brand-group">
+        <!-- Custom Steel-Ocean Crest Emblem -->
+        <svg width="24" height="24" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <rect x="2" y="2" width="60" height="60" rx="14" stroke="var(--accent)" stroke-width="4" />
+          <path d="M12 36c6-7 13-7 19 0s13 7 21-2" stroke="var(--accent)" stroke-width="4.5" stroke-linecap="round" />
+          <path d="M12 46c6-7 13-7 19 0s13 7 21-2" stroke="var(--text-secondary)" stroke-width="3.5" stroke-linecap="round" />
+          <path d="M16 25c5-5 10-5 15 0s10 5 17-2" stroke="var(--text-primary)" stroke-width="3.5" stroke-linecap="round" />
+        </svg>
+        <span class="brand-title">The Ocean</span>
+        <span id="conn-dot" class="status-dot" title="Sync Status"></span>
+      </div>
+
+      <div class="header-actions">
+        <!-- Active User Pill -->
+        <div id="user-header-group" class="hidden" style="display:flex; align-items:center; gap:7px;">
+          <div class="neu-inset" style="padding:4px 9px; display:flex; align-items:center; gap:6px; font-size:12px;">
+            <span id="hdr-username" style="font-weight:700; max-width:90px;" class="truncate"></span>
+            <span class="muted">|</span>
+            <span id="hdr-balance" class="mono text-accent" style="font-weight:700;">OC 0.00</span>
+          </div>
+          <div role="button" tabindex="0" class="neu-btn btn-negative" style="padding:5px 9px;" onclick="handleLogout()">Out</div>
+        </div>
+
+        <!-- Dual Theme Toggle -->
+        <div role="button" tabindex="0" id="theme-toggle-btn" class="neu-btn" style="padding:5px 9px;" onclick="toggleTheme()">Light</div>
+      </div>
+    </header>
+
+    <!-- PERSISTENT SESSION RESTORE SPINNER (SHOWN ONLY WHILE CHECKING SAVED SESSION) -->
+    <div id="boot-loader" class="auth-wrapper hidden">
+      <div class="neu-card" style="padding:18px 24px; font-weight:600; color:var(--text-secondary);">
+        Syncing session...
+      </div>
+    </div>
+
+    <!-- AUTH VIEW (ULTRA-MINIMAL, ZERO ADMIN HINTS) -->
+    <main id="auth-view" class="auth-wrapper hidden">
+      <div class="neu-card auth-card">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:16px; font-weight:800;">Account Access</span>
+          <span class="neu-badge">OC</span>
+        </div>
+
+        <div class="neu-inset" style="padding:4px; display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+          <div role="button" tabindex="0" id="auth-mode-login" class="neu-btn active-tab" onclick="setAuthMode('login')">Sign In</div>
+          <div role="button" tabindex="0" id="auth-mode-register" class="neu-btn" onclick="setAuthMode('register')">Register</div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:9px;">
+          <div>
+            <label class="muted" style="font-size:11px; font-weight:600; display:block; margin-bottom:4px;">Username</label>
+            <input id="auth-user" class="neu-input" type="text" maxlength="18" autocomplete="username" placeholder="3-18 characters" />
+          </div>
+          <div>
+            <label class="muted" style="font-size:11px; font-weight:600; display:block; margin-bottom:4px;">Password</label>
+            <input id="auth-pass" class="neu-input" type="password" maxlength="40" autocomplete="current-password" placeholder="••••••••" onkeydown="if(event.key==='Enter') submitAuth()" />
+          </div>
+        </div>
+
+        <div role="button" tabindex="0" id="auth-submit" class="neu-btn btn-accent" style="width:100%; padding:10px;" onclick="submitAuth()">Continue</div>
+      </div>
+    </main>
+
+    <!-- MAIN WORKSPACE -->
+    <div id="workspace-view" class="workspace hidden">
+      <!-- DESKTOP SIDEBAR -->
+      <aside class="side-nav neu-card">
+        <div class="nav-list">
+          <div role="button" tabindex="0" id="snav-desk" class="neu-btn active-tab" onclick="switchTab('desk')">Desk</div>
+          <div role="button" tabindex="0" id="snav-market" class="neu-btn" onclick="switchTab('market')">Market</div>
+          <div role="button" tabindex="0" id="snav-pay" class="neu-btn" onclick="switchTab('pay')">
+            <span>Pay</span>
+            <span id="snav-req-badge" class="neu-badge badge-warn hidden">0</span>
+          </div>
+          <div role="button" tabindex="0" id="snav-network" class="neu-btn" onclick="switchTab('network')">Network</div>
+          <div role="button" tabindex="0" id="snav-chat" class="neu-btn" onclick="switchTab('chat')">Chat</div>
+          <div role="button" tabindex="0" id="snav-gov" class="neu-btn btn-warning hidden" onclick="switchTab('gov')">Gov</div>
+        </div>
+
+        <div class="neu-inset" style="padding:9px; display:flex; flex-direction:column; gap:5px; font-size:11px;">
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muted">Income Tax</span>
+            <span id="side-tax-inc" class="mono" style="font-weight:700;">18%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muted">Wire Levy</span>
+            <span id="side-tax-wire" class="mono" style="font-weight:700;">3.5%</span>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span class="muted">Market Fee</span>
+            <span id="side-tax-mkt" class="mono" style="font-weight:700;">2.5%</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN STAGE -->
+      <div class="main-stage">
+        <!-- Frozen Account Notice -->
+        <div id="frozen-strip" class="neu-card-sm hidden" style="padding:7px 11px; color:var(--negative); font-weight:700; font-size:12px; flex-shrink:0;">
+          Account Frozen — Outgoing transactions suspended.
+        </div>
+
+        <!-- ===============================================================
+             TAB 1: DESK (KPIs, COOLDOWN CONTRACTS & LIVE LEDGER)
+             =============================================================== -->
+        <section id="pane-desk" class="tab-pane active">
+          <div class="kpi-grid">
+            <div class="neu-card-sm" style="padding:9px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Liquid Cash</div>
+              <div id="kpi-cash" class="mono" style="font-size:15px; font-weight:800; margin-top:2px;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:9px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Holdings</div>
+              <div id="kpi-holdings" class="mono text-accent" style="font-size:15px; font-weight:800; margin-top:2px;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:9px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Net Worth</div>
+              <div id="kpi-networth" class="mono text-pos" style="font-size:15px; font-weight:800; margin-top:2px;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:9px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Taxes Paid</div>
+              <div id="kpi-taxes" class="mono text-warn" style="font-size:15px; font-weight:800; margin-top:2px;">OC 0.00</div>
+            </div>
+          </div>
+
+          <div class="split-grid">
+            <!-- Earning Contracts -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Contracts</span>
+                <span id="desk-tax-badge" class="neu-badge badge-warn">Tax 18%</span>
+              </div>
+              <div id="contracts-list" class="scroll-area"></div>
+            </div>
+
+            <!-- Live Ledger -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Ledger</span>
+                <span class="neu-badge">Live</span>
+              </div>
+              <div id="ledger-list" class="scroll-area"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             TAB 2: MARKET (COMPANIES, SPARKLINES, TRADING & DIVIDENDS)
+             =============================================================== -->
+        <section id="pane-market" class="tab-pane">
+          <div class="neu-card-sm" style="padding:8px 11px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:11px;">
+              <span class="muted">Fee <strong id="mkt-fee-lbl" class="mono">2.5%</strong></span>
+              <span class="muted">CGT <strong id="mkt-cgt-lbl" class="mono">15%</strong></span>
+              <span class="muted">Charter <strong id="mkt-charter-lbl" class="mono">OC 500</strong></span>
+            </div>
+            <div role="button" tabindex="0" class="neu-btn btn-accent" onclick="openModal('modal-corp')">+ Incorporate</div>
+          </div>
+
+          <div class="split-grid">
+            <!-- Company Listings -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Exchange</span>
+                <span id="mkt-count" class="neu-badge">0</span>
+              </div>
+              <div id="companies-list" class="scroll-area"></div>
+            </div>
+
+            <!-- Order Ticket & Portfolio -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Order Ticket</span>
+                <span id="ticket-ticker-badge" class="neu-badge">--</span>
+              </div>
+
+              <div class="scroll-area" style="gap:8px;">
+                <div class="neu-inset" style="padding:4px; display:grid; grid-template-columns:1fr 1fr; gap:5px; flex-shrink:0;">
+                  <div role="button" tabindex="0" id="side-buy-btn" class="neu-btn active-tab" onclick="setOrderSide('buy')">Buy</div>
+                  <div role="button" tabindex="0" id="side-sell-btn" class="neu-btn" onclick="setOrderSide('sell')">Sell</div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1.2fr 0.8fr; gap:7px;">
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700; display:block; margin-bottom:3px;">Ticker</label>
+                    <select id="order-ticker" class="neu-input mono" onchange="updateOrderPreview()"></select>
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700; display:block; margin-bottom:3px;">Shares</label>
+                    <input id="order-qty" class="neu-input mono" type="number" min="1" step="1" value="1" oninput="updateOrderPreview()" />
+                  </div>
+                </div>
+
+                <div class="neu-inset" style="padding:8px 10px; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Price</span>
+                    <span id="ord-price" class="mono">OC 0.00</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Owned / Float</span>
+                    <span id="ord-pos" class="mono">0 / 0</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Avg Cost / P&amp;L</span>
+                    <span id="ord-pnl" class="mono">OC 0.00</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Market Fee</span>
+                    <span id="ord-fee" class="mono text-warn">OC 0.00</span>
+                  </div>
+                  <div id="ord-cgt-row" class="hidden" style="display:flex; justify-content:space-between;">
+                    <span class="muted">Cap Gains Tax</span>
+                    <span id="ord-cgt" class="mono text-warn">OC 0.00</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding-top:4px; border-top:1px solid var(--divider); font-weight:700;">
+                    <span id="ord-total-lbl">Total</span>
+                    <span id="ord-total" class="mono text-accent">OC 0.00</span>
+                  </div>
+                </div>
+
+                <div role="button" tabindex="0" class="neu-btn btn-accent" style="width:100%; padding:9px;" onclick="executeTrade()">Execute Order</div>
+                <div role="button" tabindex="0" id="dividend-open-btn" class="neu-btn btn-warning hidden" style="width:100%;" onclick="openDividendModal()">Issue Dividend</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             TAB 3: PAY (WIRE TRANSFERS & PAYMENT REQUESTS)
+             =============================================================== -->
+        <section id="pane-pay" class="tab-pane">
+          <div class="split-grid split-grid-even">
+            <!-- Wire / Request Form -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Transfer &amp; Request</span>
+                <span id="pay-levy-badge" class="neu-badge badge-warn">Levy 3.5%</span>
+              </div>
+
+              <div class="scroll-area" style="gap:8px;">
+                <div class="neu-inset" style="padding:4px; display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                  <div role="button" tabindex="0" id="pay-tab-send" class="neu-btn active-tab" onclick="setPayType('send')">Send Wire</div>
+                  <div role="button" tabindex="0" id="pay-tab-req" class="neu-btn" onclick="setPayType('request')">Request OC</div>
+                </div>
+
+                <div>
+                  <label id="pay-user-lbl" class="muted" style="font-size:10px; font-weight:700; display:block; margin-bottom:3px;">Recipient</label>
+                  <input id="pay-target" class="neu-input" type="text" maxlength="18" placeholder="username" />
+                </div>
+
+                <div>
+                  <label class="muted" style="font-size:10px; font-weight:700; display:block; margin-bottom:3px;">Amount (OC)</label>
+                  <input id="pay-amt" class="neu-input mono" type="number" min="0.01" step="0.01" placeholder="0.00" oninput="updatePayPreview()" />
+                </div>
+
+                <div>
+                  <label class="muted" style="font-size:10px; font-weight:700; display:block; margin-bottom:3px;">Memo</label>
+                  <input id="pay-memo" class="neu-input" type="text" maxlength="60" placeholder="Optional note" />
+                </div>
+
+                <div class="neu-inset" style="padding:8px 10px; display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Amount</span>
+                    <span id="pay-prev-amt" class="mono">OC 0.00</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span class="muted">Wire Levy</span>
+                    <span id="pay-prev-fee" class="mono text-warn">OC 0.00</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; padding-top:4px; border-top:1px solid var(--divider); font-weight:700;">
+                    <span id="pay-prev-tot-lbl">Total Debit</span>
+                    <span id="pay-prev-tot" class="mono text-accent">OC 0.00</span>
+                  </div>
+                </div>
+
+                <div role="button" tabindex="0" id="pay-submit-btn" class="neu-btn btn-accent" style="width:100%; padding:9px;" onclick="submitPayAction()">Send Wire</div>
+              </div>
+            </div>
+
+            <!-- Payment Requests List -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Requests</span>
+                <span id="req-count-badge" class="neu-badge badge-warn">0</span>
+              </div>
+              <div id="requests-list" class="scroll-area"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             TAB 4: NETWORK (NET WORTH LEADERBOARD + OPT-IN/OUT TOGGLE)
+             =============================================================== -->
+        <section id="pane-network" class="tab-pane">
+          <div class="neu-card-sm" style="padding:8px 11px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-shrink:0;">
+            <span class="panel-title">Net Worth Index</span>
+            <div id="privacy-controls" style="display:flex; align-items:center; gap:7px;">
+              <span id="privacy-state-lbl" class="neu-badge badge-pos">Visible</span>
+              <div role="button" tabindex="0" id="privacy-toggle-btn" class="neu-btn" onclick="toggleNetworkOptIn()">Opt Out</div>
+            </div>
+          </div>
+
+          <div class="neu-card panel-box" style="flex:1;">
+            <div class="panel-head" style="font-size:10px; font-weight:700; text-transform:uppercase; color:var(--text-secondary);">
+              <span style="width:36px;">#</span>
+              <span style="flex:1;">Citizen</span>
+              <span style="width:95px; text-align:right;">Holdings</span>
+              <span style="width:105px; text-align:right;">Net Worth</span>
+            </div>
+            <div id="network-list" class="scroll-area"></div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             TAB 5: CHAT (REAL-TIME GLOBAL CHANNEL)
+             =============================================================== -->
+        <section id="pane-chat" class="tab-pane">
+          <div class="neu-card panel-box" style="flex:1;">
+            <div class="panel-head">
+              <span class="panel-title">Channel</span>
+              <span id="online-badge" class="neu-badge badge-pos">1 Online</span>
+            </div>
+            <div id="chat-list" class="scroll-area"></div>
+            <div style="flex-shrink:0; display:flex; gap:7px; padding-top:4px;">
+              <input id="chat-msg-input" class="neu-input" type="text" maxlength="220" placeholder="Message..." onkeydown="if(event.key==='Enter') sendChat()" />
+              <div role="button" tabindex="0" class="neu-btn btn-accent" style="padding:8px 14px;" onclick="sendChat()">Send</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             TAB 6: GOV (SOVEREIGN CONTROL — VISIBLE ONLY TO "admin")
+             =============================================================== -->
+        <section id="pane-gov" class="tab-pane">
+          <div class="kpi-grid">
+            <div class="neu-card-sm" style="padding:8px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Treasury</div>
+              <div id="gov-treasury" class="mono text-warn" style="font-size:14px; font-weight:800;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:8px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Tax Collected</div>
+              <div id="gov-tax-total" class="mono text-pos" style="font-size:14px; font-weight:800;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:8px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Money Supply</div>
+              <div id="gov-supply" class="mono text-accent" style="font-size:14px; font-weight:800;">OC 0.00</div>
+            </div>
+            <div class="neu-card-sm" style="padding:8px 11px;">
+              <div class="muted" style="font-size:10px; font-weight:700; text-transform:uppercase;">Citizens</div>
+              <div id="gov-citizens-count" class="mono" style="font-size:14px; font-weight:800;">0</div>
+            </div>
+          </div>
+
+          <div class="split-grid gov-grid">
+            <!-- Fiscal Rates & Revenue Breakdown -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Fiscal Rates</span>
+                <div role="button" tabindex="0" class="neu-btn" style="padding:3px 8px; font-size:10px;" onclick="runAutoCleanup(true)">Cleanup</div>
+              </div>
+              <div class="scroll-area" style="gap:6px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Income %</label>
+                    <input id="cfg-income" class="neu-input mono" type="number" min="0" max="80" step="0.5" />
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Wire Levy %</label>
+                    <input id="cfg-wire" class="neu-input mono" type="number" min="0" max="50" step="0.5" />
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Market Fee %</label>
+                    <input id="cfg-market" class="neu-input mono" type="number" min="0" max="30" step="0.5" />
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Cap Gains %</label>
+                    <input id="cfg-cgt" class="neu-input mono" type="number" min="0" max="80" step="0.5" />
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Charter OC</label>
+                    <input id="cfg-charter" class="neu-input mono" type="number" min="10" max="50000" step="10" />
+                  </div>
+                  <div>
+                    <label class="muted" style="font-size:10px; font-weight:700;">Dividend %</label>
+                    <input id="cfg-dividend" class="neu-input mono" type="number" min="0" max="60" step="0.5" />
+                  </div>
+                </div>
+                <div role="button" tabindex="0" class="neu-btn btn-accent" style="width:100%;" onclick="saveFiscalConfig()">Apply Rates</div>
+
+                <div class="panel-head" style="margin-top:4px;">
+                  <span class="panel-title">Revenue Breakdown</span>
+                </div>
+                <div id="gov-breakdown" class="neu-inset" style="padding:7px 9px; display:flex; flex-direction:column; gap:3px; font-size:11px;"></div>
+              </div>
+            </div>
+
+            <!-- Citizen Directory & Enforcement -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Citizen Registry</span>
+                <span class="neu-badge">All</span>
+              </div>
+              <div id="gov-users-list" class="scroll-area"></div>
+            </div>
+
+            <!-- Companies & Tax Log -->
+            <div class="neu-card panel-box">
+              <div class="panel-head">
+                <span class="panel-title">Corps &amp; Tax Logs</span>
+              </div>
+              <div id="gov-corps-logs" class="scroll-area"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MOBILE BOTTOM NAVIGATION -->
+        <nav class="mobile-nav neu-card">
+          <div role="button" tabindex="0" id="mnav-desk" class="neu-btn active-tab" onclick="switchTab('desk')">Desk</div>
+          <div role="button" tabindex="0" id="mnav-market" class="neu-btn" onclick="switchTab('market')">Market</div>
+          <div role="button" tabindex="0" id="mnav-pay" class="neu-btn" onclick="switchTab('pay')">
+            <span>Pay</span>
+            <span id="mnav-req-badge" class="neu-badge badge-warn hidden">0</span>
+          </div>
+          <div role="button" tabindex="0" id="mnav-network" class="neu-btn" onclick="switchTab('network')">Net</div>
+          <div role="button" tabindex="0" id="mnav-chat" class="neu-btn" onclick="switchTab('chat')">Chat</div>
+          <div role="button" tabindex="0" id="mnav-gov" class="neu-btn btn-warning hidden" onclick="switchTab('gov')">Gov</div>
+        </nav>
+      </div>
+    </div>
+
+    <!-- SUBTLE COPYRIGHT FOOTER -->
+    <footer class="footer-bar">
+      © 2026 Sanchar Koirala | All rights reserved
+    </footer>
+  </div>
+
+  <!-- =====================================================================
+       MODALS (CONTRACT CHALLENGE, INCORPORATE COMPANY, ISSUE DIVIDEND)
+       ===================================================================== -->
+  <!-- Contract Verification Modal -->
+  <div id="modal-challenge" class="modal-backdrop hidden">
+    <div class="neu-card modal-box">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span id="chal-title" style="font-weight:800; font-size:14px;">Verification</span>
+        <div role="button" tabindex="0" class="neu-btn" style="padding:3px 8px;" onclick="closeModal('modal-challenge')">✕</div>
+      </div>
+      <div id="chal-penalty-note" class="neu-badge badge-neg hidden">Wrong answer: OC 15.00 penalty</div>
+      <div class="neu-inset" style="padding:12px; text-align:center;">
+        <div id="chal-question" class="mono" style="font-size:15px; font-weight:800;"></div>
+      </div>
+      <input id="chal-answer" class="neu-input mono" type="number" step="any" placeholder="Answer" onkeydown="if(event.key==='Enter') submitChallenge()" />
+      <div role="button" tabindex="0" class="neu-btn btn-accent" style="width:100%; padding:9px;" onclick="submitChallenge()">Submit</div>
+    </div>
+  </div>
+
+  <!-- Incorporate Company Modal -->
+  <div id="modal-corp" class="modal-backdrop hidden">
+    <div class="neu-card modal-box">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-weight:800; font-size:14px;">Incorporate Company</span>
+        <div role="button" tabindex="0" class="neu-btn" style="padding:3px 8px;" onclick="closeModal('modal-corp')">✕</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px;">
+        <span class="muted">Charter Fee</span>
+        <span id="modal-charter-fee" class="mono text-warn" style="font-weight:700;">OC 500.00</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1.4fr 0.6fr; gap:7px;">
+        <div>
+          <label class="muted" style="font-size:10px; font-weight:700;">Name</label>
+          <input id="corp-name" class="neu-input" type="text" maxlength="26" placeholder="Oceanic Logistics" />
+        </div>
+        <div>
+          <label class="muted" style="font-size:10px; font-weight:700;">Ticker (2-5)</label>
+          <input id="corp-ticker" class="neu-input mono" type="text" maxlength="5" placeholder="OCLG" style="text-transform:uppercase;" />
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px;">
+        <div>
+          <label class="muted" style="font-size:10px; font-weight:700;">Total Shares</label>
+          <input id="corp-shares" class="neu-input mono" type="number" min="100" max="100000" value="1000" />
+        </div>
+        <div>
+          <label class="muted" style="font-size:10px; font-weight:700;">Initial Price (OC)</label>
+          <input id="corp-price" class="neu-input mono" type="number" min="1" max="500" step="0.5" value="10" />
+        </div>
+      </div>
+      <div role="button" tabindex="0" class="neu-btn btn-accent" style="width:100%; padding:9px;" onclick="incorporateCompany()">Launch</div>
+    </div>
+  </div>
+
+  <!-- Issue Dividend Modal -->
+  <div id="modal-dividend" class="modal-backdrop hidden">
+    <div class="neu-card modal-box">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-weight:800; font-size:14px;">Issue Dividend (<span id="div-ticker" class="mono"></span>)</span>
+        <div role="button" tabindex="0" class="neu-btn" style="padding:3px 8px;" onclick="closeModal('modal-dividend')">✕</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px;">
+        <span class="muted">Dividend Tax</span>
+        <span id="div-tax-lbl" class="mono text-warn" style="font-weight:700;">12%</span>
+      </div>
+      <div>
+        <label class="muted" style="font-size:10px; font-weight:700;">OC Per Share</label>
+        <input id="div-per-share" class="neu-input mono" type="number" min="0.1" step="0.1" value="1.0" />
+      </div>
+      <div role="button" tabindex="0" class="neu-btn btn-accent" style="width:100%; padding:9px;" onclick="issueDividend()">Distribute</div>
+    </div>
+  </div>
+
+  <script>
+    'use strict';
+
+    /* =====================================================================
+       1. EXACT FIREBASE CONFIGURATION & STRICT ROOT ISOLATION
+       ===================================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBV-R0xymHbONLGp9h2nBcYzuEnQJmAOO0",
+      authDomain: "whisperdb-57111.firebaseapp.com",
+      databaseURL: "https://whisperdb-57111-default-rtdb.firebaseio.com",
+      projectId: "whisperdb-57111",
+      storageBucket: "whisperdb-57111.firebasestorage.app",
+      messagingSenderId: "668048746508",
+      appId: "1:668048746508:web:7e39b07e10ccfe3da5a629"
+    };
+
+    const ROOT_PATH = 'synced_up_db_economy';
+    const SESSION_KEY = 'the_ocean_session_v1';
+    const THEME_KEY = 'the_ocean_theme';
+
+    const DEFAULT_CONFIG = {
+      incomeTax: 18,
+      wireLevy: 3.5,
+      marketFee: 2.5,
+      capGainsTax: 15,
+      charterFee: 500,
+      dividendTax: 12
+    };
+
+    const CONTRACTS = [
+      { id: 'shift', title: 'Work Shift', gross: 32, cooldownSec: 45, type: 'instant' },
+      { id: 'audit', title: 'Ledger Audit', gross: 95, cooldownSec: 120, type: 'arithmetic' },
+      { id: 'bid', title: 'Infrastructure Bid', gross: 190, cooldownSec: 210, type: 'logic', penalty: 15 }
+    ];
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Strict path helper: every single read/write stays inside synced_up_db_economy/
+    function dbRef(sub = '') {
+      const clean = String(sub).replace(/^\/+/, '');
+      return db.ref(clean ? `${ROOT_PATH}/${clean}` : ROOT_PATH);
+    }
+
+    /* =====================================================================
+       2. GLOBAL STATE
+       ===================================================================== */
+    const state = {
+      theme: localStorage.getItem(THEME_KEY) || 'navy',
+      authMode: 'login',
+      user: null,
+      activeTab: 'desk',
+      orderSide: 'buy',
+      payType: 'send',
+      users: {},
+      companies: {},
+      txs: {},
+      requests: {},
+      chat: {},
+      taxLogs: {},
+      config: { ...DEFAULT_CONFIG },
+      presence: {},
+      pendingTreasury: 0,
+      activeChallenge: null,
+      lastChatTs: 0
+    };
+
+    /* =====================================================================
+       3. UTILITIES: FORMATTING, SANITIZATION, HAPTICS & SHA-256
+       ===================================================================== */
+    function round2(n) {
+      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    }
+
+    function fmtOC(val) {
+      const n = Number(val) || 0;
+      return 'OC ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function haptic() {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(8); } catch (e) {}
+      }
+    }
+
+    function toast(msg, tone = 'info') {
+      const stack = document.getElementById('toast-stack');
+      const el = document.createElement('div');
+      el.className = 'neu-card-sm toast-item';
+      if (tone === 'pos') el.style.color = 'var(--positive)';
+      else if (tone === 'neg') el.style.color = 'var(--negative)';
+      else if (tone === 'warn') el.style.color = 'var(--warning)';
+      el.textContent = msg;
+      stack.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 220);
+      }, 2800);
+    }
+
+    function openModal(id) {
+      haptic();
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+      if (id === 'modal-corp') {
+        document.getElementById('modal-charter-fee').textContent = fmtOC(state.config.charterFee);
+      }
+    }
+
+    function closeModal(id) {
+      haptic();
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    // Keyboard & haptic support for all <div role="button"> elements
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.closest('[role="button"]')) haptic();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.getAttribute('role') === 'button') {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+
+    function randomSaltHex() {
+      const buf = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(buf);
+      } else {
+        for (let i = 0; i < 16; i++) buf[i] = Math.floor(Math.random() * 256);
+      }
+      return Array.from(buf).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    async function hashPassword(password, salt) {
+      const text = `${salt}:${password}`;
+      if (window.crypto && window.crypto.subtle) {
+        const enc = new TextEncoder().encode(text);
+        const digest = await window.crypto.subtle.digest('SHA-256', enc);
+        return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      // Fallback SHA-256
+      let h = 0x811c9dc5;
+      for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return (h >>> 0).toString(16).padStart(8, '0');
+    }
+
+    /* =====================================================================
+       4. PERSISTENT THEME TOGGLE ("navy" / "light")
+       ===================================================================== */
+    function applyTheme(theme) {
+      state.theme = theme === 'light' ? 'light' : 'navy';
+      document.documentElement.setAttribute('data-theme', state.theme);
+      localStorage.setItem(THEME_KEY, state.theme);
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.textContent = state.theme === 'navy' ? 'Light' : 'Navy';
+    }
+
+    function toggleTheme() {
+      applyTheme(state.theme === 'navy' ? 'light' : 'navy');
+    }
+
+    /* =====================================================================
+       5. RTDB LISTENERS & PERSISTENT AUTHENTICATION
+       ===================================================================== */
+    function startDatabaseSync() {
+      db.ref('.info/connected').on('value', (snap) => {
+        const ok = snap.val() === true;
+        const dot = document.getElementById('conn-dot');
+        dot.className = 'status-dot ' + (ok ? 'online' : 'offline');
+        if (ok) {
+          seedDefaultConfig();
+          heartbeatPresence();
+          runAutoCleanup(false);
+        }
+      });
+
+      dbRef('config').on('value', (snap) => {
+        state.config = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
+        syncConfigInputs();
+        renderAll();
+      });
+
+      dbRef('users').on('value', (snap) => {
+        state.users = snap.val() || {};
+        if (state.user && !state.users[state.user]) {
+          handleLogout();
+          return;
+        }
+        renderAll();
+      });
+
+      dbRef('pendingTreasury').on('value', (snap) => {
+        state.pendingTreasury = Number(snap.val()) || 0;
+        if (state.user === 'admin' && state.pendingTreasury > 0) {
+          sweepPendingTreasuryToAdmin();
+        }
+      });
+
+      dbRef('companies').on('value', (snap) => {
+        state.companies = snap.val() || {};
+        renderAll();
+      });
+
+      dbRef('txs').limitToLast(80).on('value', (snap) => {
+        state.txs = snap.val() || {};
+        renderLedger();
+      });
+
+      dbRef('requests').limitToLast(80).on('value', (snap) => {
+        state.requests = snap.val() || {};
+        renderRequests();
+      });
+
+      dbRef('chat').limitToLast(60).on('value', (snap) => {
+        state.chat = snap.val() || {};
+        renderChat();
+      });
+
+      dbRef('taxLogs').limitToLast(60).on('value', (snap) => {
+        state.taxLogs = snap.val() || {};
+        if (state.user === 'admin') renderGov();
+      });
+
+      dbRef('presence').on('value', (snap) => {
+        state.presence = snap.val() || {};
+        const now = Date.now();
+        const count = Object.values(state.presence).filter(ts => now - ts < 120000).length;
+        document.getElementById('online-badge').textContent = `${Math.max(1, count)} Online`;
+        renderNetwork();
+      });
+    }
+
+    function seedDefaultConfig() {
+      dbRef('config').transaction((curr) => {
+        if (curr === null) return { ...DEFAULT_CONFIG };
+        return;
+      });
+    }
+
+    async function sweepPendingTreasuryToAdmin() {
+      let swept = 0;
+      await dbRef('pendingTreasury').transaction((curr) => {
+        swept = round2(curr || 0);
+        return 0;
+      });
+      if (swept > 0) {
+        await dbRef('users/admin/balance').transaction((b) => round2((b || 0) + swept));
+      }
+    }
+
+    function setAuthMode(mode) {
+      state.authMode = mode;
+      document.getElementById('auth-mode-login').className = 'neu-btn' + (mode === 'login' ? ' active-tab' : '');
+      document.getElementById('auth-mode-register').className = 'neu-btn' + (mode === 'register' ? ' active-tab' : '');
+    }
+
+    async function submitAuth() {
+      const username = document.getElementById('auth-user').value.trim().toLowerCase();
+      const password = document.getElementById('auth-pass').value;
+
+      if (!/^[a-z0-9_]{3,18}$/.test(username)) {
+        toast('Username: 3-18 lowercase letters, numbers, or _', 'neg');
+        return;
+      }
+      if (!password || password.length < 4) {
+        toast('Password: minimum 4 characters', 'neg');
+        return;
+      }
+
+      if (state.authMode === 'login') {
+        const snap = await dbRef(`users/${username}`).once('value');
+        const record = snap.val();
+        if (!record) {
+          toast('Account not found', 'neg');
+          return;
+        }
+        const hash = await hashPassword(password, record.salt);
+        if (hash !== record.passwordHash) {
+          toast('Incorrect credentials', 'neg');
+          return;
+        }
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ username, passwordHash: hash }));
+        enterWorkspace(username);
+      } else {
+        const salt = randomSaltHex();
+        const passwordHash = await hashPassword(password, salt);
+        const isGov = username === 'admin';
+
+        const res = await dbRef(`users/${username}`).transaction((existing) => {
+          if (existing !== null) return;
+          return {
+            username,
+            role: isGov ? 'government' : 'citizen',
+            salt,
+            passwordHash,
+            balance: isGov ? 100000 : 250,
+            optInNetwork: !isGov,
+            frozen: false,
+            taxPaid: 0,
+            createdAt: Date.now()
+          };
+        });
+
+        if (!res.committed) {
+          toast('Username unavailable', 'neg');
+          return;
+        }
+
+        if (isGov) {
+          seedDefaultConfig();
+          await sweepPendingTreasuryToAdmin();
+        } else {
+          logTx('GRANT', 'TREASURY', username, 250, 0, 'Initial balance');
+        }
+
+        localStorage.setItem(SESSION_KEY, JSON.stringify({ username, passwordHash }));
+        enterWorkspace(username);
+      }
+    }
+
+    async function restorePersistentSession() {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) {
+        document.getElementById('auth-view').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('boot-loader').classList.remove('hidden');
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.username || !parsed.passwordHash) throw new Error('Invalid');
+        const snap = await dbRef(`users/${parsed.username}`).once('value');
+        const record = snap.val();
+        if (record && record.passwordHash === parsed.passwordHash) {
+          document.getElementById('boot-loader').classList.add('hidden');
+          enterWorkspace(parsed.username);
+          return;
+        }
+      } catch (e) {}
+
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('boot-loader').classList.add('hidden');
+      document.getElementById('auth-view').classList.remove('hidden');
+    }
+
+    function enterWorkspace(username) {
+      state.user = username;
+      document.getElementById('auth-view').classList.add('hidden');
+      document.getElementById('boot-loader').classList.add('hidden');
+      document.getElementById('workspace-view').classList.remove('hidden');
+      document.getElementById('user-header-group').classList.remove('hidden');
+
+      const isGov = username === 'admin';
+      document.getElementById('snav-gov').classList.toggle('hidden', !isGov);
+      document.getElementById('mnav-gov').classList.toggle('hidden', !isGov);
+
+      if (isGov) sweepPendingTreasuryToAdmin();
+      heartbeatPresence();
+      switchTab('desk');
+      renderAll();
+    }
+
+    function handleLogout() {
+      if (state.user) {
+        dbRef(`presence/${state.user}`).remove().catch(() => {});
+      }
+      state.user = null;
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('workspace-view').classList.add('hidden');
+      document.getElementById('user-header-group').classList.add('hidden');
+      document.getElementById('auth-pass').value = '';
+      document.getElementById('auth-view').classList.remove('hidden');
+    }
+
+    /* =====================================================================
+       6. TAX ROUTING TO ADMIN & LEDGER LOGGING
+       ===================================================================== */
+    async function routeTaxToAdmin(amount, category, fromUser, note = '') {
+      const tax = round2(amount);
+      if (tax <= 0) return;
+
+      const adminSnap = await dbRef('users/admin').once('value');
+      if (adminSnap.exists()) {
+        await dbRef('users/admin/balance').transaction((b) => round2((b || 0) + tax));
+      } else {
+        await dbRef('pendingTreasury').transaction((p) => round2((p || 0) + tax));
+      }
+
+      await dbRef('taxLogs').push({
+        amount: tax,
+        category,
+        fromUser,
+        note: String(note).slice(0, 60),
+        ts: Date.now()
+      });
+    }
+
+    function logTx(type, from, to, amount, tax, memo = '') {
+      dbRef('txs').push({
+        type,
+        from,
+        to,
+        amount: round2(amount),
+        tax: round2(tax),
+        memo: String(memo).slice(0, 60),
+        ts: Date.now()
+      });
+    }
+
+    /* =====================================================================
+       7. NAVIGATION
+       ===================================================================== */
+    function switchTab(tab) {
+      if (tab === 'gov' && state.user !== 'admin') return;
+      state.activeTab = tab;
+
+      ['desk', 'market', 'pay', 'network', 'chat', 'gov'].forEach((t) => {
+        const pane = document.getElementById(`pane-${t}`);
+        if (pane) pane.classList.toggle('active', t === tab);
+
+        const sBtn = document.getElementById(`snav-${t}`);
+        if (sBtn) sBtn.classList.toggle('active-tab', t === tab);
+
+        const mBtn = document.getElementById(`mnav-${t}`);
+        if (mBtn) mBtn.classList.toggle('active-tab', t === tab);
+      });
+
+      renderAll();
+    }
+
+    /* =====================================================================
+       8. DESK / COOLDOWN-GATED CONTRACTS & CHALLENGES
+       ===================================================================== */
+    function getCooldownRemaining(userObj, contract) {
+      if (!userObj || !userObj.cooldowns || !userObj.cooldowns[contract.id]) return 0;
+      const last = Number(userObj.cooldowns[contract.id]) || 0;
+      const rem = Math.ceil((last + contract.cooldownSec * 1000 - Date.now()) / 1000);
+      return Math.max(0, rem);
+    }
+
+    async function triggerContract(contractId) {
+      const username = state.user;
+      const u = state.users[username];
+      if (!u) return;
+      if (u.frozen && username !== 'admin') {
+        toast('Account frozen', 'neg');
+        return;
+      }
+
+      const contract = CONTRACTS.find(c => c.id === contractId);
+      if (!contract) return;
+
+      const rem = getCooldownRemaining(u, contract);
+      if (rem > 0) {
+        toast(`Cooldown: ${rem}s`, 'warn');
+        return;
+      }
+
+      if (contract.type === 'instant') {
+        await completeContractPayout(contract);
+        return;
+      }
+
+      if (contract.type === 'arithmetic') {
+        const a = Math.floor(Math.random() * 140) + 35;
+        const b = Math.floor(Math.random() * 89) + 18;
+        const c = Math.floor(Math.random() * 45) + 11;
+        state.activeChallenge = {
+          contract,
+          expected: a + b - c
+        };
+        document.getElementById('chal-title').textContent = contract.title;
+        document.getElementById('chal-penalty-note').classList.add('hidden');
+        document.getElementById('chal-question').textContent = `${a} + ${b} - ${c} = ?`;
+      } else if (contract.type === 'logic') {
+        const base = (Math.floor(Math.random() * 9) + 4) * 50; // 200..600
+        const pct = [10, 15, 20, 25][Math.floor(Math.random() * 4)];
+        state.activeChallenge = {
+          contract,
+          expected: round2(base * (1 + pct / 100))
+        };
+        document.getElementById('chal-title').textContent = contract.title;
+        document.getElementById('chal-penalty-note').textContent = `Wrong answer: ${fmtOC(contract.penalty)} penalty`;
+        document.getElementById('chal-penalty-note').classList.remove('hidden');
+        document.getElementById('chal-question').textContent = `${fmtOC(base)} + ${pct}% yield = ?`;
+      }
+
+      document.getElementById('chal-answer').value = '';
+      openModal('modal-challenge');
+      setTimeout(() => document.getElementById('chal-answer').focus(), 60);
+    }
+
+    async function submitChallenge() {
+      const ch = state.activeChallenge;
+      if (!ch) return;
+      const ans = round2(Number(document.getElementById('chal-answer').value));
+      closeModal('modal-challenge');
+      state.activeChallenge = null;
+
+      if (Math.abs(ans - ch.expected) > 0.01) {
+        const username = state.user;
+        const u = state.users[username];
+        if (ch.contract.penalty && username !== 'admin' && u) {
+          const pen = Math.min(round2(u.balance || 0), ch.contract.penalty);
+          await dbRef(`users/${username}`).transaction((rec) => {
+            if (!rec) return rec;
+            rec.balance = Math.max(0, round2((rec.balance || 0) - pen));
+            rec.taxPaid = round2((rec.taxPaid || 0) + pen);
+            if (!rec.cooldowns) rec.cooldowns = {};
+            rec.cooldowns[ch.contract.id] = Date.now();
+            return rec;
+          });
+          if (pen > 0) {
+            await routeTaxToAdmin(pen, 'PENALTY', username, ch.contract.title);
+            logTx('PENALTY', username, 'TREASURY', pen, pen, ch.contract.title);
+          }
+          toast(`Failed — ${fmtOC(pen)} penalty deducted`, 'neg');
+        } else {
+          await dbRef(`users/${username}/cooldowns/${ch.contract.id}`).set(Date.now());
+          toast('Verification failed', 'neg');
+        }
+        return;
+      }
+
+      await completeContractPayout(ch.contract);
+    }
+
+    async function completeContractPayout(contract) {
+      const username = state.user;
+      const isGov = username === 'admin';
+      const taxRate = isGov ? 0 : Number(state.config.incomeTax || 18);
+      const gross = round2(contract.gross);
+      const tax = round2(gross * (taxRate / 100));
+      const net = round2(gross - tax);
+
+      let ok = false;
+      await dbRef(`users/${username}`).transaction((u) => {
+        if (!u || (u.frozen && !isGov)) return;
+        const rem = getCooldownRemaining(u, contract);
+        if (rem > 0) return;
+        if (!u.cooldowns) u.cooldowns = {};
+        u.cooldowns[contract.id] = Date.now();
+        u.balance = round2((u.balance || 0) + net);
+        u.taxPaid = round2((u.taxPaid || 0) + tax);
+        ok = true;
+        return u;
+      });
+
+      if (!ok) return;
+      if (tax > 0) {
+        await routeTaxToAdmin(tax, 'INCOME', username, contract.title);
+      }
+      logTx('EARN', 'CONTRACT', username, net, tax, contract.title);
+      toast(`+${fmtOC(net)} (Tax ${fmtOC(tax)})`, 'pos');
+    }
+
+    /* =====================================================================
+       9. COMPANIES, SPARKLINES, STOCK TRADING & DIVIDENDS
+       ===================================================================== */
+    async function incorporateCompany() {
+      const username = state.user;
+      const u = state.users[username];
+      if (!u) return;
+      if (u.frozen && username !== 'admin') {
+        toast('Account frozen', 'neg');
+        return;
+      }
+
+      const name = document.getElementById('corp-name').value.trim();
+      const ticker = document.getElementById('corp-ticker').value.trim().toUpperCase().replace(/[^A-Z]/g, '');
+      const totalShares = Math.floor(Number(document.getElementById('corp-shares').value));
+      const price = round2(Number(document.getElementById('corp-price').value));
+      const fee = username === 'admin' ? 0 : round2(state.config.charterFee || 500);
+
+      if (name.length < 2) { toast('Invalid company name', 'neg'); return; }
+      if (ticker.length < 2 || ticker.length > 5) { toast('Ticker must be 2-5 letters', 'neg'); return; }
+      if (totalShares < 100 || totalShares > 100000) { toast('Shares: 100 - 100,000', 'neg'); return; }
+      if (price < 1 || price > 500) { toast('Price: OC 1 - OC 500', 'neg'); return; }
+      if (state.companies[ticker]) { toast('Ticker already exists', 'neg'); return; }
+      if ((u.balance || 0) < fee) { toast(`Requires ${fmtOC(fee)}`, 'neg'); return; }
+
+      const founderShares = Math.floor(totalShares * 0.6);
+      const floatShares = totalShares - founderShares;
+
+      let paid = false;
+      await dbRef(`users/${username}`).transaction((rec) => {
+        if (!rec || (rec.balance || 0) < fee) return;
+        rec.balance = round2((rec.balance || 0) - fee);
+        rec.taxPaid = round2((rec.taxPaid || 0) + fee);
+        if (!rec.holdings) rec.holdings = {};
+        rec.holdings[ticker] = { shares: founderShares, avgCost: price };
+        paid = true;
+        return rec;
+      });
+
+      if (!paid) return;
+
+      await dbRef(`companies/${ticker}`).set({
+        ticker,
+        name: name.slice(0, 26),
+        founder: username,
+        totalShares,
+        availableShares: floatShares,
+        price,
+        priceHistory: [price],
+        createdAt: Date.now()
+      });
+
+      if (fee > 0) {
+        await routeTaxToAdmin(fee, 'CHARTER', username, ticker);
+      }
+      logTx('CHARTER', username, ticker, fee, fee, name);
+      closeModal('modal-corp');
+      document.getElementById('corp-name').value = '';
+      document.getElementById('corp-ticker').value = '';
+      toast(`${ticker} listed`, 'pos');
+    }
+
+    function setOrderSide(side) {
+      state.orderSide = side;
+      document.getElementById('side-buy-btn').className = 'neu-btn' + (side === 'buy' ? ' active-tab' : '');
+      document.getElementById('side-sell-btn').className = 'neu-btn' + (side === 'sell' ? ' active-tab' : '');
+      updateOrderPreview();
+    }
+
+    function selectTicker(ticker) {
+      const sel = document.getElementById('order-ticker');
+      sel.value = ticker;
+      updateOrderPreview();
+    }
+
+    function updateOrderPreview() {
+      const ticker = document.getElementById('order-ticker').value;
+      const qty = Math.max(1, Math.floor(Number(document.getElementById('order-qty').value) || 1));
+      const corp = state.companies[ticker];
+      const u = state.users[state.user];
+
+      document.getElementById('ticket-ticker-badge').textContent = ticker || '--';
+      const divBtn = document.getElementById('dividend-open-btn');
+      divBtn.classList.toggle('hidden', !(corp && u && corp.founder === u.username));
+
+      if (!corp || !u) {
+        document.getElementById('ord-price').textContent = 'OC 0.00';
+        document.getElementById('ord-pos').textContent = '0 / 0';
+        document.getElementById('ord-pnl').textContent = 'OC 0.00';
+        document.getElementById('ord-fee').textContent = 'OC 0.00';
+        document.getElementById('ord-total').textContent = 'OC 0.00';
+        document.getElementById('ord-cgt-row').classList.add('hidden');
+        return;
+      }
+
+      const pos = (u.holdings && u.holdings[ticker]) || { shares: 0, avgCost: corp.price };
+      const isGov = u.username === 'admin';
+      const mktFeeRate = isGov ? 0 : Number(state.config.marketFee || 2.5);
+      const cgtRate = isGov ? 0 : Number(state.config.capGainsTax || 15);
+
+      const sub = round2(corp.price * qty);
+      const fee = round2(sub * (mktFeeRate / 100));
+      const unrealized = round2((corp.price - pos.avgCost) * pos.shares);
+
+      document.getElementById('ord-price').textContent = fmtOC(corp.price);
+      document.getElementById('ord-pos').textContent = `${pos.shares} / ${corp.availableShares}`;
+      const pnlEl = document.getElementById('ord-pnl');
+      pnlEl.textContent = `${fmtOC(pos.avgCost)} (${unrealized >= 0 ? '+' : ''}${fmtOC(unrealized)})`;
+      pnlEl.className = 'mono ' + (unrealized >= 0 ? 'text-pos' : 'text-neg');
+      document.getElementById('ord-fee').textContent = fmtOC(fee);
+
+      if (state.orderSide === 'buy') {
+        document.getElementById('ord-cgt-row').classList.add('hidden');
+        document.getElementById('ord-total-lbl').textContent = 'Total Debit';
+        document.getElementById('ord-total').textContent = fmtOC(round2(sub + fee));
+      } else {
+        const gain = round2((corp.price - pos.avgCost) * qty);
+        const cgt = gain > 0 ? round2(gain * (cgtRate / 100)) : 0;
+        document.getElementById('ord-cgt-row').classList.remove('hidden');
+        document.getElementById('ord-cgt').textContent = fmtOC(cgt);
+        document.getElementById('ord-total-lbl').textContent = 'Net Credit';
+        document.getElementById('ord-total').textContent = fmtOC(Math.max(0, round2(sub - fee - cgt)));
+      }
+    }
+
+    async function executeTrade() {
+      const username = state.user;
+      const u = state.users[username];
+      const ticker = document.getElementById('order-ticker').value;
+      const qty = Math.floor(Number(document.getElementById('order-qty').value));
+
+      if (!u || (u.frozen && username !== 'admin')) { toast('Account frozen', 'neg'); return; }
+      if (!ticker || !state.companies[ticker]) { toast('Select ticker', 'neg'); return; }
+      if (!qty || qty < 1) { toast('Invalid share count', 'neg'); return; }
+
+      const isGov = username === 'admin';
+      const mktFeeRate = isGov ? 0 : Number(state.config.marketFee || 2.5);
+      const cgtRate = isGov ? 0 : Number(state.config.capGainsTax || 15);
+
+      if (state.orderSide === 'buy') {
+        const corp = state.companies[ticker];
+        const estCost = round2(corp.price * qty * (1 + mktFeeRate / 100));
+        if ((u.balance || 0) < estCost) { toast('Insufficient balance', 'neg'); return; }
+
+        let filled = false;
+        let execPrice = corp.price;
+        await dbRef(`companies/${ticker}`).transaction((c) => {
+          if (!c || (c.availableShares || 0) < qty) return;
+          execPrice = c.price;
+          c.availableShares -= qty;
+          const bump = Math.min(0.06, Math.max(0.005, (qty / c.totalShares) * 0.2));
+          c.price = round2(c.price * (1 + bump));
+          const hist = Array.isArray(c.priceHistory) ? c.priceHistory.slice(-23) : [execPrice];
+          hist.push(c.price);
+          c.priceHistory = hist;
+          filled = true;
+          return c;
+        });
+
+        if (!filled) { toast('Insufficient market float', 'neg'); return; }
+
+        const sub = round2(execPrice * qty);
+        const fee = round2(sub * (mktFeeRate / 100));
+        const debit = round2(sub + fee);
+
+        await dbRef(`users/${username}`).transaction((rec) => {
+          if (!rec) return rec;
+          rec.balance = round2((rec.balance || 0) - debit);
+          rec.taxPaid = round2((rec.taxPaid || 0) + fee);
+          if (!rec.holdings) rec.holdings = {};
+          const prev = rec.holdings[ticker] || { shares: 0, avgCost: execPrice };
+          const totalS = prev.shares + qty;
+          rec.holdings[ticker] = {
+            shares: totalS,
+            avgCost: round2(((prev.shares * prev.avgCost) + sub) / totalS)
+          };
+          return rec;
+        });
+
+        if (fee > 0) await routeTaxToAdmin(fee, 'MARKET', username, `Buy ${qty} ${ticker}`);
+        logTx('BUY', username, ticker, sub, fee, `${qty} sh @ ${fmtOC(execPrice)}`);
+        toast(`Bought ${qty} ${ticker}`, 'pos');
+      } else {
+        const pos = u.holdings && u.holdings[ticker];
+        if (!pos || pos.shares < qty) { toast('Insufficient shares', 'neg'); return; }
+
+        let filled = false;
+        let execPrice = 0;
+        await dbRef(`companies/${ticker}`).transaction((c) => {
+          if (!c) return;
+          execPrice = c.price;
+          c.availableShares = (c.availableShares || 0) + qty;
+          const drop = Math.min(0.05, Math.max(0.004, (qty / c.totalShares) * 0.16));
+          c.price = Math.max(0.5, round2(c.price * (1 - drop)));
+          const hist = Array.isArray(c.priceHistory) ? c.priceHistory.slice(-23) : [execPrice];
+          hist.push(c.price);
+          c.priceHistory = hist;
+          filled = true;
+          return c;
+        });
+
+        if (!filled) return;
+
+        const gross = round2(execPrice * qty);
+        const fee = round2(gross * (mktFeeRate / 100));
+        const gain = round2((execPrice - pos.avgCost) * qty);
+        const cgt = gain > 0 ? round2(gain * (cgtRate / 100)) : 0;
+        const net = Math.max(0, round2(gross - fee - cgt));
+
+        await dbRef(`users/${username}`).transaction((rec) => {
+          if (!rec || !rec.holdings || !rec.holdings[ticker]) return rec;
+          const rem = rec.holdings[ticker].shares - qty;
+          if (rem <= 0) delete rec.holdings[ticker];
+          else rec.holdings[ticker].shares = rem;
+          rec.balance = round2((rec.balance || 0) + net);
+          rec.taxPaid = round2((rec.taxPaid || 0) + fee + cgt);
+          return rec;
+        });
+
+        if (fee > 0) await routeTaxToAdmin(fee, 'MARKET', username, `Sell ${qty} ${ticker}`);
+        if (cgt > 0) await routeTaxToAdmin(cgt, 'CAP_GAINS', username, `Gain ${qty} ${ticker}`);
+        logTx('SELL', ticker, username, net, round2(fee + cgt), `${qty} sh @ ${fmtOC(execPrice)}`);
+        toast(`Sold ${qty} ${ticker} (+${fmtOC(net)})`, 'pos');
+      }
+      updateOrderPreview();
+    }
+
+    function openDividendModal() {
+      const ticker = document.getElementById('order-ticker').value;
+      const corp = state.companies[ticker];
+      if (!corp || corp.founder !== state.user) return;
+      document.getElementById('div-ticker').textContent = ticker;
+      document.getElementById('div-tax-lbl').textContent = `${state.config.dividendTax}%`;
+      openModal('modal-dividend');
+    }
+
+    async function issueDividend() {
+      const username = state.user;
+      const ticker = document.getElementById('order-ticker').value;
+      const corp = state.companies[ticker];
+      const u = state.users[username];
+      if (!corp || !u || corp.founder !== username) return;
+
+      const perShare = round2(Number(document.getElementById('div-per-share').value));
+      if (perShare < 0.1) { toast('Minimum OC 0.10/share', 'neg'); return; }
+
+      const holders = [];
+      let heldSum = 0;
+      Object.values(state.users).forEach((usr) => {
+        const s = usr.holdings && usr.holdings[ticker] ? usr.holdings[ticker].shares : 0;
+        if (s > 0) {
+          holders.push({ username: usr.username, shares: s });
+          heldSum += s;
+        }
+      });
+
+      const grossTotal = round2(heldSum * perShare);
+      if ((u.balance || 0) < grossTotal) {
+        toast(`Need ${fmtOC(grossTotal)}`, 'neg');
+        return;
+      }
+
+      let ok = false;
+      await dbRef(`users/${username}`).transaction((rec) => {
+        if (!rec || (rec.balance || 0) < grossTotal) return;
+        rec.balance = round2((rec.balance || 0) - grossTotal);
+        ok = true;
+        return rec;
+      });
+      if (!ok) return;
+
+      const divTaxRate = Number(state.config.dividendTax || 12);
+      let totalTax = 0;
+
+      for (const h of holders) {
+        const hGross = round2(h.shares * perShare);
+        const hTax = h.username === 'admin' ? 0 : round2(hGross * (divTaxRate / 100));
+        const hNet = round2(hGross - hTax);
+        totalTax = round2(totalTax + hTax);
+
+        await dbRef(`users/${h.username}`).transaction((rec) => {
+          if (!rec) return rec;
+          rec.balance = round2((rec.balance || 0) + hNet);
+          rec.taxPaid = round2((rec.taxPaid || 0) + hTax);
+          return rec;
+        });
+      }
+
+      if (totalTax > 0) await routeTaxToAdmin(totalTax, 'DIVIDEND', username, ticker);
+      logTx('DIVIDEND', ticker, 'HOLDERS', grossTotal, totalTax, `${fmtOC(perShare)}/sh`);
+      closeModal('modal-dividend');
+      toast(`Distributed ${fmtOC(grossTotal)}`, 'pos');
+    }
+
+    function buildSparklineSVG(history) {
+      const pts = Array.isArray(history) && history.length > 1 ? history : [1, 1];
+      const min = Math.min(...pts);
+      const max = Math.max(...pts);
+      const span = max - min || 1;
+      const w = 64, h = 22;
+      const coords = pts.map((v, i) => {
+        const x = (i / (pts.length - 1)) * w;
+        const y = h - 3 - ((v - min) / span) * (h - 6);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const up = pts[pts.length - 1] >= pts[0];
+      const stroke = up ? 'var(--positive)' : 'var(--negative)';
+      return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none"><polyline points="${coords}" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    /* =====================================================================
+       10. P2P WIRE TRANSFERS & PAYMENT REQUESTS
+       ===================================================================== */
+    function setPayType(type) {
+      state.payType = type;
+      document.getElementById('pay-tab-send').className = 'neu-btn' + (type === 'send' ? ' active-tab' : '');
+      document.getElementById('pay-tab-req').className = 'neu-btn' + (type === 'request' ? ' active-tab' : '');
+      document.getElementById('pay-user-lbl').textContent = type === 'send' ? 'Recipient' : 'Payer';
+      document.getElementById('pay-submit-btn').textContent = type === 'send' ? 'Send Wire' : 'Send Request';
+      updatePayPreview();
+    }
+
+    function updatePayPreview() {
+      const amt = Math.max(0, round2(Number(document.getElementById('pay-amt').value) || 0));
+      const isGov = state.user === 'admin';
+      const rate = isGov ? 0 : Number(state.config.wireLevy || 3.5);
+      const levy = state.payType === 'send' ? round2(amt * (rate / 100)) : 0;
+
+      document.getElementById('pay-levy-badge').textContent = `Levy ${rate}%`;
+      document.getElementById('pay-prev-amt').textContent = fmtOC(amt);
+      document.getElementById('pay-prev-fee').textContent = fmtOC(levy);
+      document.getElementById('pay-prev-tot-lbl').textContent = state.payType === 'send' ? 'Total Debit' : 'Request Total';
+      document.getElementById('pay-prev-tot').textContent = fmtOC(round2(amt + levy));
+    }
+
+    async function submitPayAction() {
+      const sender = state.user;
+      const u = state.users[sender];
+      const target = document.getElementById('pay-target').value.trim().toLowerCase();
+      const amt = round2(Number(document.getElementById('pay-amt').value));
+      const memo = document.getElementById('pay-memo').value.trim();
+
+      if (!u || (u.frozen && sender !== 'admin')) { toast('Account frozen', 'neg'); return; }
+      if (!target || !state.users[target]) { toast('User not found', 'neg'); return; }
+      if (target === sender) { toast('Invalid target', 'neg'); return; }
+      if (!amt || amt < 0.01) { toast('Invalid amount', 'neg'); return; }
+
+      if (state.payType === 'send') {
+        const rate = sender === 'admin' ? 0 : Number(state.config.wireLevy || 3.5);
+        const levy = round2(amt * (rate / 100));
+        const total = round2(amt + levy);
+
+        if ((u.balance || 0) < total) { toast('Insufficient balance', 'neg'); return; }
+
+        let ok = false;
+        await dbRef(`users/${sender}`).transaction((rec) => {
+          if (!rec || (rec.balance || 0) < total) return;
+          rec.balance = round2((rec.balance || 0) - total);
+          rec.taxPaid = round2((rec.taxPaid || 0) + levy);
+          ok = true;
+          return rec;
+        });
+        if (!ok) return;
+
+        await dbRef(`users/${target}/balance`).transaction((b) => round2((b || 0) + amt));
+        if (levy > 0) await routeTaxToAdmin(levy, 'WIRE', sender, `To ${target}`);
+        logTx('WIRE', sender, target, amt, levy, memo);
+
+        document.getElementById('pay-amt').value = '';
+        document.getElementById('pay-memo').value = '';
+        updatePayPreview();
+        toast(`Sent ${fmtOC(amt)} to ${target}`, 'pos');
+      } else {
+        await dbRef('requests').push({
+          from: sender,
+          to: target,
+          amount: amt,
+          memo: memo.slice(0, 60),
+          status: 'pending',
+          ts: Date.now()
+        });
+        document.getElementById('pay-amt').value = '';
+        document.getElementById('pay-memo').value = '';
+        updatePayPreview();
+        toast(`Requested ${fmtOC(amt)} from ${target}`, 'pos');
+      }
+    }
+
+    async function handleRequestAction(reqId, action) {
+      const req = state.requests[reqId];
+      const me = state.user;
+      const u = state.users[me];
+      if (!req || !u) return;
+
+      if (action === 'decline') {
+        await dbRef(`requests/${reqId}`).update({ status: 'declined', settledAt: Date.now() });
+        return;
+      }
+
+      if (action === 'pay') {
+        if (u.frozen && me !== 'admin') { toast('Account frozen', 'neg'); return; }
+        const rate = me === 'admin' ? 0 : Number(state.config.wireLevy || 3.5);
+        const levy = round2(req.amount * (rate / 100));
+        const total = round2(req.amount + levy);
+
+        if ((u.balance || 0) < total) { toast('Insufficient balance', 'neg'); return; }
+
+        let locked = false;
+        await dbRef(`requests/${reqId}`).transaction((r) => {
+          if (!r || r.status !== 'pending') return;
+          r.status = 'paid';
+          r.settledAt = Date.now();
+          locked = true;
+          return r;
+        });
+        if (!locked) return;
+
+        await dbRef(`users/${me}`).transaction((rec) => {
+          if (!rec) return rec;
+          rec.balance = round2((rec.balance || 0) - total);
+          rec.taxPaid = round2((rec.taxPaid || 0) + levy);
+          return rec;
+        });
+
+        await dbRef(`users/${req.from}/balance`).transaction((b) => round2((b || 0) + req.amount));
+        if (levy > 0) await routeTaxToAdmin(levy, 'WIRE', me, `Req from ${req.from}`);
+        logTx('REQUEST_PAID', me, req.from, req.amount, levy, req.memo);
+        toast(`Paid ${fmtOC(req.amount)}`, 'pos');
+      }
+    }
+
+    /* =====================================================================
+       11. NETWORK (LEADERBOARD + OPT-IN/OUT) & CHAT
+       ===================================================================== */
+    async function toggleNetworkOptIn() {
+      const me = state.user;
+      if (!me || me === 'admin') return;
+      const u = state.users[me];
+      if (!u) return;
+      const next = u.optInNetwork === false ? true : false;
+      await dbRef(`users/${me}/optInNetwork`).set(next);
+    }
+
+    function calcHoldingsValue(u) {
+      if (!u || !u.holdings) return 0;
+      let sum = 0;
+      Object.entries(u.holdings).forEach(([ticker, pos]) => {
+        const corp = state.companies[ticker];
+        const px = corp ? corp.price : (pos.avgCost || 0);
+        sum += (pos.shares || 0) * px;
+      });
+      return round2(sum);
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chat-msg-input');
+      const text = input.value.trim();
+      const me = state.user;
+      if (!text || !me) return;
+
+      const now = Date.now();
+      if (now - state.lastChatTs < 1500) return;
+      state.lastChatTs = now;
+      input.value = '';
+
+      await dbRef('chat').push({
+        sender: me,
+        isGov: me === 'admin',
+        text: text.slice(0, 220),
+        ts: now
+      });
+    }
+
+    /* =====================================================================
+       12. GOVERNMENT CONSOLE ("admin" ONLY)
+       ===================================================================== */
+    function syncConfigInputs() {
+      const c = state.config;
+      const pairs = [
+        ['cfg-income', c.incomeTax],
+        ['cfg-wire', c.wireLevy],
+        ['cfg-market', c.marketFee],
+        ['cfg-cgt', c.capGainsTax],
+        ['cfg-charter', c.charterFee],
+        ['cfg-dividend', c.dividendTax]
+      ];
+      pairs.forEach(([id, v]) => {
+        const el = document.getElementById(id);
+        if (el && document.activeElement !== el) el.value = v;
+      });
+    }
+
+    async function saveFiscalConfig() {
+      if (state.user !== 'admin') return;
+      const next = {
+        incomeTax: Math.min(80, Math.max(0, Number(document.getElementById('cfg-income').value) || 0)),
+        wireLevy: Math.min(50, Math.max(0, Number(document.getElementById('cfg-wire').value) || 0)),
+        marketFee: Math.min(30, Math.max(0, Number(document.getElementById('cfg-market').value) || 0)),
+        capGainsTax: Math.min(80, Math.max(0, Number(document.getElementById('cfg-cgt').value) || 0)),
+        charterFee: Math.max(10, round2(Number(document.getElementById('cfg-charter').value) || 500)),
+        dividendTax: Math.min(60, Math.max(0, Number(document.getElementById('cfg-dividend').value) || 0))
+      };
+      await dbRef('config').set(next);
+      toast('Rates updated', 'pos');
+    }
+
+    async function govUserAction(target, action) {
+      if (state.user !== 'admin' || target === 'admin') return;
+      const u = state.users[target];
+      if (!u) return;
+
+      if (action === 'freeze') {
+        await dbRef(`users/${target}/frozen`).set(!u.frozen);
+      } else if (action === 'grant') {
+        const amt = 100;
+        let ok = false;
+        await dbRef('users/admin/balance').transaction((b) => {
+          if ((b || 0) < amt) return;
+          ok = true;
+          return round2(b - amt);
+        });
+        if (!ok) { toast('Insufficient treasury', 'neg'); return; }
+        await dbRef(`users/${target}/balance`).transaction((b) => round2((b || 0) + amt));
+        logTx('GRANT', 'TREASURY', target, amt, 0, 'Stimulus');
+        toast(`Granted ${fmtOC(amt)} to ${target}`, 'pos');
+      } else if (action === 'fine') {
+        const fine = Math.min(round2(u.balance || 0), 50);
+        if (fine <= 0) return;
+        await dbRef(`users/${target}/balance`).transaction((b) => Math.max(0, round2((b || 0) - fine)));
+        await routeTaxToAdmin(fine, 'FINE', target, 'Direct seizure');
+        logTx('FINE', target, 'TREASURY', fine, fine, 'Seizure');
+        toast(`Fined ${target} ${fmtOC(fine)}`, 'warn');
+      }
+    }
+
+    async function delistCompany(ticker) {
+      if (state.user !== 'admin') return;
+      await dbRef(`companies/${ticker}`).remove();
+      toast(`Delisted ${ticker}`, 'warn');
+    }
+
+    /* =====================================================================
+       13. SURGICAL NON-DESTRUCTIVE RTDB AUTO-CLEANUP
+       ===================================================================== */
+    async function runAutoCleanup(manual = false) {
+      const now = Date.now();
+      const lockWindow = manual ? 5000 : 180000; // 3 minutes
+
+      let locked = false;
+      await dbRef('meta/lastCleanup').transaction((last) => {
+        if (last && now - last < lockWindow) return;
+        locked = true;
+        return now;
+      });
+      if (!locked) return;
+
+      async function trimCollection(subpath, keepCount) {
+        const snap = await dbRef(subpath).once('value');
+        const val = snap.val();
+        if (!val) return;
+        const keys = Object.keys(val);
+        if (keys.length <= keepCount) return;
+        const del = {};
+        keys.slice(0, keys.length - keepCount).forEach(k => { del[k] = null; });
+        await dbRef(subpath).update(del);
+      }
+
+      // 1. Trim chat (60), txs (80), taxLogs (60)
+      await trimCollection('chat', 60);
+      await trimCollection('txs', 80);
+      await trimCollection('taxLogs', 60);
+
+      // 2. Trim each company's priceHistory to newest 24 points (never delete active companies)
+      const compSnap = await dbRef('companies').once('value');
+      const comps = compSnap.val() || {};
+      for (const [ticker, c] of Object.entries(comps)) {
+        if (Array.isArray(c.priceHistory) && c.priceHistory.length > 24) {
+          await dbRef(`companies/${ticker}/priceHistory`).set(c.priceHistory.slice(-24));
+        }
+      }
+
+      // 3. Delete settled or declined requests older than 15m (never touch pending requests)
+      const reqSnap = await dbRef('requests').once('value');
+      const reqs = reqSnap.val() || {};
+      const reqDel = {};
+      Object.entries(reqs).forEach(([k, r]) => {
+        if (r.status !== 'pending' && r.settledAt && now - r.settledAt > 900000) {
+          reqDel[k] = null;
+        }
+      });
+      if (Object.keys(reqDel).length > 0) await dbRef('requests').update(reqDel);
+
+      // 4. Delete stale presence entries older than 2m
+      const presSnap = await dbRef('presence').once('value');
+      const pres = presSnap.val() || {};
+      const presDel = {};
+      Object.entries(pres).forEach(([u, ts]) => {
+        if (now - ts > 120000) presDel[u] = null;
+      });
+      if (Object.keys(presDel).length > 0) await dbRef('presence').update(presDel);
+
+      if (manual) toast('Cleanup complete', 'pos');
+    }
+
+    function heartbeatPresence() {
+      if (state.user) {
+        dbRef(`presence/${state.user}`).set(Date.now()).catch(() => {});
+      }
+    }
+
+    setInterval(() => {
+      heartbeatPresence();
+      if (state.user && state.activeTab === 'desk') renderContracts();
+    }, 1000);
+
+    setInterval(() => {
+      runAutoCleanup(false);
+    }, 90000);
+
+    /* =====================================================================
+       14. RENDERING PIPELINE
+       ===================================================================== */
+    function renderAll() {
+      const me = state.user;
+      if (!me) return;
+      const u = state.users[me];
+      if (!u) return;
+
+      const isGov = me === 'admin';
+      const holdVal = calcHoldingsValue(u);
+      const netWorth = round2((u.balance || 0) + holdVal);
+
+      document.getElementById('hdr-username').textContent = me;
+      document.getElementById('hdr-balance').textContent = fmtOC(u.balance || 0);
+      document.getElementById('frozen-strip').classList.toggle('hidden', !(u.frozen && !isGov));
+
+      document.getElementById('side-tax-inc').textContent = `${state.config.incomeTax}%`;
+      document.getElementById('side-tax-wire').textContent = `${state.config.wireLevy}%`;
+      document.getElementById('side-tax-mkt').textContent = `${state.config.marketFee}%`;
+
+      document.getElementById('kpi-cash').textContent = fmtOC(u.balance || 0);
+      document.getElementById('kpi-holdings').textContent = fmtOC(holdVal);
+      document.getElementById('kpi-networth').textContent = fmtOC(netWorth);
+      document.getElementById('kpi-taxes').textContent = fmtOC(u.taxPaid || 0);
+
+      renderContracts();
+      renderLedger();
+      renderMarket();
+      renderRequests();
+      renderNetwork();
+      renderChat();
+      if (isGov) renderGov();
+    }
+
+    function renderContracts() {
+      const me = state.user;
+      const u = state.users[me];
+      if (!u) return;
+      const isGov = me === 'admin';
+      const taxRate = isGov ? 0 : Number(state.config.incomeTax || 18);
+      document.getElementById('desk-tax-badge').textContent = `Tax ${taxRate}%`;
+
+      const list = document.getElementById('contracts-list');
+      list.innerHTML = CONTRACTS.map((c) => {
+        const tax = round2(c.gross * (taxRate / 100));
+        const net = round2(c.gross - tax);
+        const rem = getCooldownRemaining(u, c);
+        const disabled = (u.frozen && !isGov) || rem > 0;
+        const label = rem > 0 ? `${rem}s` : 'Execute';
+
+        return `
+          <div class="neu-inset row-item">
+            <div style="min-width:0;">
+              <div style="font-weight:700; font-size:13px;">${esc(c.title)}</div>
+              <div class="mono muted" style="font-size:11px;">Net <span class="text-pos">${fmtOC(net)}</span> • Tax ${fmtOC(tax)}</div>
+            </div>
+            <div role="button" tabindex="0" class="neu-btn ${disabled ? 'disabled' : 'btn-accent'}" onclick="triggerContract('${c.id}')">${label}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLedger() {
+      const list = document.getElementById('ledger-list');
+      const rows = Object.values(state.txs).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 40);
+      if (rows.length === 0) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:18px;">No activity</div>`;
+        return;
+      }
+      list.innerHTML = rows.map((t) => {
+        const tm = new Date(t.ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div class="neu-inset row-item">
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:5px;">
+                <span class="neu-badge">${esc(t.type)}</span>
+                <span style="font-weight:600;" class="truncate">${esc(t.from)} → ${esc(t.to)}</span>
+              </div>
+              <div class="muted truncate" style="font-size:11px;">${esc(t.memo || '')} ${tm}</div>
+            </div>
+            <div style="text-align:right; flex-shrink:0;">
+              <div class="mono" style="font-weight:700;">${fmtOC(t.amount)}</div>
+              ${t.tax > 0 ? `<div class="mono text-warn" style="font-size:10px;">Tax ${fmtOC(t.tax)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMarket() {
+      document.getElementById('mkt-fee-lbl').textContent = `${state.config.marketFee}%`;
+      document.getElementById('mkt-cgt-lbl').textContent = `${state.config.capGainsTax}%`;
+      document.getElementById('mkt-charter-lbl').textContent = fmtOC(state.config.charterFee);
+
+      const corps = Object.values(state.companies).sort((a, b) => (b.price * b.totalShares) - (a.price * a.totalShares));
+      document.getElementById('mkt-count').textContent = corps.length;
+
+      const sel = document.getElementById('order-ticker');
+      const cur = sel.value;
+      sel.innerHTML = `<option value="">--</option>` + corps.map(c => `<option value="${esc(c.ticker)}">${esc(c.ticker)} (${fmtOC(c.price)})</option>`).join('');
+      if (cur && state.companies[cur]) sel.value = cur;
+      else if (corps.length > 0) sel.value = corps[0].ticker;
+      updateOrderPreview();
+
+      const list = document.getElementById('companies-list');
+      const u = state.users[state.user];
+      if (corps.length === 0) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:18px;">No listed companies</div>`;
+        return;
+      }
+
+      list.innerHTML = corps.map((c) => {
+        const held = u && u.holdings && u.holdings[c.ticker] ? u.holdings[c.ticker].shares : 0;
+        return `
+          <div class="neu-inset row-item" style="cursor:pointer;" onclick="selectTicker('${esc(c.ticker)}')">
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="neu-badge">${esc(c.ticker)}</span>
+                <span style="font-weight:700;" class="truncate">${esc(c.name)}</span>
+              </div>
+              <div class="muted mono" style="font-size:11px; margin-top:2px;">Float ${c.availableShares}/${c.totalShares}${held > 0 ? ` • Owned ${held}` : ''}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              ${buildSparklineSVG(c.priceHistory)}
+              <span class="mono" style="font-weight:800;">${fmtOC(c.price)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRequests() {
+      const me = state.user;
+      if (!me) return;
+
+      const mine = Object.entries(state.requests)
+        .map(([id, r]) => ({ id, ...r }))
+        .filter(r => r.from === me || r.to === me)
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+      const pendingIn = mine.filter(r => r.to === me && r.status === 'pending').length;
+      document.getElementById('req-count-badge').textContent = pendingIn;
+
+      ['snav-req-badge', 'mnav-req-badge'].forEach((id) => {
+        const el = document.getElementById(id);
+        el.textContent = pendingIn;
+        el.classList.toggle('hidden', pendingIn === 0);
+      });
+
+      const list = document.getElementById('requests-list');
+      if (mine.length === 0) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:18px;">No requests</div>`;
+        return;
+      }
+
+      list.innerHTML = mine.map((r) => {
+        const incoming = r.to === me;
+        const badgeCls = r.status === 'paid' ? 'badge-pos' : (r.status === 'declined' ? 'badge-neg' : 'badge-warn');
+        return `
+          <div class="neu-inset row-item">
+            <div style="min-width:0;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="neu-badge ${badgeCls}">${esc(r.status.toUpperCase())}</span>
+                <span style="font-weight:700;" class="truncate">${incoming ? `From ${esc(r.from)}` : `To ${esc(r.to)}`}</span>
+              </div>
+              <div class="muted truncate" style="font-size:11px;">${esc(r.memo || '')}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+              <span class="mono" style="font-weight:800;">${fmtOC(r.amount)}</span>
+              ${incoming && r.status === 'pending' ? `
+                <div role="button" tabindex="0" class="neu-btn btn-positive" style="padding:4px 8px;" onclick="handleRequestAction('${r.id}', 'pay')">Pay</div>
+                <div role="button" tabindex="0" class="neu-btn btn-negative" style="padding:4px 8px;" onclick="handleRequestAction('${r.id}', 'decline')">✕</div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderNetwork() {
+      const me = state.user;
+      const u = state.users[me];
+      const privCtrl = document.getElementById('privacy-controls');
+
+      if (!u || me === 'admin') {
+        privCtrl.classList.add('hidden');
+      } else {
+        privCtrl.classList.remove('hidden');
+        const vis = u.optInNetwork !== false;
+        const lbl = document.getElementById('privacy-state-lbl');
+        lbl.textContent = vis ? 'Visible' : 'Hidden';
+        lbl.className = 'neu-badge ' + (vis ? 'badge-pos' : 'badge-warn');
+        document.getElementById('privacy-toggle-btn').textContent = vis ? 'Opt Out' : 'Opt In';
+      }
+
+      // Strictly exclude "admin" from Network leaderboard
+      const rows = Object.values(state.users)
+        .filter(usr => usr && usr.username !== 'admin' && usr.role !== 'government' && usr.optInNetwork !== false)
+        .map((usr) => {
+          const hold = calcHoldingsValue(usr);
+          const net = round2((usr.balance || 0) + hold);
+          const online = state.presence[usr.username] && (Date.now() - state.presence[usr.username] < 120000);
+          return { username: usr.username, hold, net, online };
+        })
+        .sort((a, b) => b.net - a.net);
+
+      const list = document.getElementById('network-list');
+      if (rows.length === 0) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:18px;">No public entries</div>`;
+        return;
+      }
+
+      list.innerHTML = rows.map((r, i) => `
+        <div class="neu-inset row-item">
+          <span class="mono muted" style="width:36px; font-weight:700;">#${i + 1}</span>
+          <div style="flex:1; min-width:0; display:flex; align-items:center; gap:6px;">
+            <span class="status-dot ${r.online ? 'online' : ''}"></span>
+            <span style="font-weight:700;" class="truncate">${esc(r.username)}</span>
+          </div>
+          <span class="mono muted" style="width:95px; text-align:right; font-size:11px;">${fmtOC(r.hold)}</span>
+          <span class="mono text-pos" style="width:105px; text-align:right; font-weight:800;">${fmtOC(r.net)}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderChat() {
+      const list = document.getElementById('chat-list');
+      const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+      const msgs = Object.values(state.chat).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+
+      if (msgs.length === 0) {
+        list.innerHTML = `<div class="muted" style="text-align:center; padding:18px;">No messages</div>`;
+        return;
+      }
+
+      list.innerHTML = msgs.map((m) => {
+        const tm = new Date(m.ts || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const isGov = m.sender === 'admin' || m.isGov;
+        return `
+          <div class="neu-inset" style="padding:7px 10px;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:11px;">
+              <span style="font-weight:700;">${esc(m.sender)}</span>
+              ${isGov ? `<span class="neu-badge badge-warn">GOV</span>` : ''}
+              <span class="muted" style="margin-left:auto; font-size:10px;">${tm}</span>
+            </div>
+            <div style="margin-top:2px; word-break:break-word;">${esc(m.text)}</div>
+          </div>
+        `;
+      }).join('');
+
+      if (nearBottom) list.scrollTop = list.scrollHeight;
+    }
+
+    function renderGov() {
+      if (state.user !== 'admin') return;
+      const admin = state.users['admin'] || { balance: 0 };
+      const citizens = Object.values(state.users).filter(u => u && u.username !== 'admin');
+
+      let supply = round2(admin.balance || 0);
+      citizens.forEach(c => { supply = round2(supply + (c.balance || 0)); });
+
+      const logs = Object.values(state.taxLogs);
+      let taxTotal = 0;
+      const byCat = { INCOME: 0, WIRE: 0, MARKET: 0, CAP_GAINS: 0, CHARTER: 0, DIVIDEND: 0, PENALTY: 0, FINE: 0 };
+      logs.forEach((l) => {
+        const amt = Number(l.amount) || 0;
+        taxTotal = round2(taxTotal + amt);
+        const cat = l.category || 'OTHER';
+        byCat[cat] = round2((byCat[cat] || 0) + amt);
+      });
+
+      document.getElementById('gov-treasury').textContent = fmtOC(admin.balance || 0);
+      document.getElementById('gov-tax-total').textContent = fmtOC(taxTotal);
+      document.getElementById('gov-supply').textContent = fmtOC(supply);
+      document.getElementById('gov-citizens-count').textContent = citizens.length;
+
+      document.getElementById('gov-breakdown').innerHTML = Object.entries(byCat).map(([k, v]) => `
+        <div style="display:flex; justify-content:space-between;">
+          <span class="muted">${esc(k)}</span>
+          <span class="mono">${fmtOC(v)}</span>
+        </div>
+      `).join('');
+
+      const uList = document.getElementById('gov-users-list');
+      uList.innerHTML = citizens.length === 0
+        ? `<div class="muted" style="text-align:center; padding:14px;">No citizens</div>`
+        : citizens.map((c) => `
+          <div class="neu-inset" style="padding:8px 9px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:5px; min-width:0;">
+                <span style="font-weight:700;" class="truncate">${esc(c.username)}</span>
+                ${c.optInNetwork === false ? `<span class="neu-badge">Hidden</span>` : ''}
+                ${c.frozen ? `<span class="neu-badge badge-neg">Frozen</span>` : ''}
+              </div>
+              <span class="mono" style="font-weight:700;">${fmtOC(c.balance || 0)}</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+              <div role="button" tabindex="0" class="neu-btn btn-positive" style="padding:4px;" onclick="govUserAction('${esc(c.username)}', 'grant')">+100</div>
+              <div role="button" tabindex="0" class="neu-btn btn-warning" style="padding:4px;" onclick="govUserAction('${esc(c.username)}', 'fine')">-50</div>
+              <div role="button" tabindex="0" class="neu-btn btn-negative" style="padding:4px;" onclick="govUserAction('${esc(c.username)}', 'freeze')">${c.frozen ? 'Unfreeze' : 'Freeze'}</div>
+            </div>
+          </div>
+        `).join('');
+
+      const cLogs = document.getElementById('gov-corps-logs');
+      const corpItems = Object.values(state.companies).map((c) => `
+        <div class="neu-inset row-item">
+          <div style="min-width:0;">
+            <span class="neu-badge">${esc(c.ticker)}</span>
+            <span style="font-weight:700;">${esc(c.name)}</span>
+            <span class="mono muted" style="font-size:11px;">(${esc(c.founder)})</span>
+          </div>
+          <div role="button" tabindex="0" class="neu-btn btn-negative" style="padding:3px 7px;" onclick="delistCompany('${esc(c.ticker)}')">Delist</div>
+        </div>
+      `).join('');
+
+      const logItems = logs.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 25).map((l) => `
+        <div class="neu-inset row-item">
+          <div style="min-width:0;">
+            <span class="neu-badge badge-warn">${esc(l.category)}</span>
+            <span class="muted" style="font-size:11px;">${esc(l.fromUser)}</span>
+          </div>
+          <span class="mono text-pos" style="font-weight:700;">+${fmtOC(l.amount)}</span>
+        </div>
+      `).join('');
+
+      cLogs.innerHTML = corpItems + logItems || `<div class="muted" style="text-align:center; padding:14px;">Empty</div>`;
+    }
+
+    /* =====================================================================
+       15. BOOTSTRAP ON WINDOW LOAD
+       ===================================================================== */
+    window.onload = function () {
+      applyTheme(state.theme);
+      startDatabaseSync();
+      restorePersistentSession();
+    };
+  </script>
+</body>
+</html>
